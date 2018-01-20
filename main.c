@@ -43,7 +43,7 @@ int main(void)
 	char str[20], str_C0[20],str_Meas_1[20],str_Meas_2[20],str_Meas_3[20],str_result1[20],str_result2[20];
 	uint16_t LW=0,HW=0;
 	uint8_t i=0,j=0;
-	
+	// Collecting forst 100 samples to pick value for calibration
 	for(i=0;i<100;i++)
 	{HW =  Read_Frame(0x04);
 	LW =  Read_Frame(0x05);
@@ -93,7 +93,8 @@ int main(void)
 		if(j==5 || result<0)
 		{
 			Write_Frame(0x0C,0xFF,0xFF);
-			FDC1004_init();i=0,j=0;}
+			FDC1004_init();i=0,j=0;
+		}
 		if(i==10)i=0;
 		
 		double result2=((double)Meas_2-(double)C0)/((double)Meas_3-(double)Meas_1);
