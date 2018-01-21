@@ -32,14 +32,14 @@ void UART_Puts(char*);
 
 int main(void)
 {
-	USART_init();
+	USART_init();          // Initialize USART : Used for Debugging
 	
-	TWI_init_master();
+	TWI_init_master();	// Initialize I2C interface : Used for communicating with FDC1004
 	
-	FDC1004_init();
+	FDC1004_init();		// Configure the FDC1004 IC 
 	
-	double result, result2;
-	int32_t Meas_1, Meas_2, Meas_3, C0,C01[100];
+	double result, result2;			
+	int32_t Meas_1, Meas_2, Meas_3, C0,C01[100]; // To store channel Measurements
 	char str[20], str_C0[20],str_Meas_1[20],str_Meas_2[20],str_Meas_3[20],str_result1[20],str_result2[20];
 	uint16_t LW=0,HW=0;
 	uint8_t i=0,j=0;
@@ -75,7 +75,7 @@ int main(void)
 		
 		HW =  Read_Frame(0x04);
 		LW =  Read_Frame(0x05);
-		//         USART_send(HW>>8);
+		//         USART_send(HW>>8);       : For Debugging
 		//         USART_send(HW);
 		//         USART_send(LW>>8);
 		Meas_2 =  (HW * 256.0) + (LW/260.0);
@@ -100,6 +100,7 @@ int main(void)
 		double result2=((double)Meas_2-(double)C0)/((double)Meas_3-(double)Meas_1);
 		
 		//result=((double)Meas_2-(double)C0);
+	    
 		double result1=(double)Meas_3-(double)Meas_1;
 		
 		memset(str,         0, sizeof str);
@@ -117,7 +118,7 @@ int main(void)
 		dtostrf(Meas_3,		9, 1, str_Meas_3);
 		dtostrf(result1,	9, 1, str_result1);
 		dtostrf(result2,	9, 6, str_result2);
-		
+		// Dispay results through USART for Debugging
 		if(result>0)
 		{
 		UART_Puts("C0: ");   UART_Puts(str_C0);
@@ -140,7 +141,8 @@ int main(void)
 
 void FDC1004_init()
 {
-	Write_Frame(0x08,0x1C,0x00);
+	// Writing specific values to FDC registers based on the Datasheet
+	Write_Frame(0x08,0x1C,0x00);		
 	Write_Frame(0x09,0x3C,0x00);
 	Write_Frame(0x0A,0x5C,0x00);
 	Write_Frame(0x0B,0x7C,0x00);
@@ -237,7 +239,7 @@ void TWI_stop(void)
 	while(!(TWCR & (1<<TWSTO)));  // Wait till stop condition is transmitted
 }
 
-uint16_t Read_Frame(char pointer_addr)
+uint16_t Read_Frame(char pointer_addr)  // Function to communicate with the FDC and organise the received frames
 {
 	
 	uint16_t result;
@@ -259,25 +261,21 @@ uint16_t Read_Frame(char pointer_addr)
 	return result;
 }
 
-void Write_Frame(char pointer_addr,char dataMSB,char dataLSB)
+void Write_Frame(char pointer_addr,char dataMSB,char dataLSB) // Function to write to the FDC registers
 {
 	TWI_start();
-	
 	TWI_write_address(dev_address<<1|TW_WRITE);
-	
 	TWI_write_data(pointer_addr);
-	
 	TWI_write_data(dataMSB);
 	TWI_write_data(dataLSB);
 	TWI_stop();
 	_delay_ms(100);
 	
 }
-void UART_Puts(char *str)
+void UART_Puts(char *str) // To put String on the UART
 {
 	
 	while( *str != '\0' ){
-		
 		USART_send( *str++ );
 	}
 }
